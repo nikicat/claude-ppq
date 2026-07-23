@@ -13,16 +13,16 @@ Bitcoin-friendly) from Claude Code:
 
 1. Put your ppq API key in `~/.config/ppq/api-key` (`chmod 600`), or export
    `PPQ_API_KEY`.
-2. Install the plugin:
+2. Install the plugin (the repo is its own single-plugin marketplace):
 
 ```
-# quick test (single session)
-claude --plugin-dir /home/nb/src/ppq-skill
-
-# permanent
-/plugin marketplace add /home/nb/src/ppq-skill
+/plugin marketplace add nikicat/claude-ppq
 /plugin install ppq@ppq
 ```
+
+For local development: `claude --plugin-dir /path/to/claude-ppq` (single
+session), or `/plugin marketplace add /path/to/claude-ppq` (tracks your
+working tree).
 
 `uv` is required for the bundled scripts (they're PEP 723 inline-dependency
 scripts — no venv or install step).
