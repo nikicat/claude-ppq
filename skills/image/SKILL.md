@@ -20,6 +20,13 @@ Key comes from `$PPQ_API_KEY` or `~/.config/ppq/api-key`. Every paid call prints
 `cost $…` — always relay the cost to the user. HTTP 402 = balance empty → use the
 `ppq:topup` skill.
 
+**No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
+uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:
+`pacman -S uv` / `brew install uv`), or run via `pipx run "$SCRIPT" …` (pipx
+≥1.4.2 reads the same inline dependency metadata). Don't fall back to bare
+`python3` — the dependencies live in the script's inline metadata and won't be
+installed.
+
 ## Picking a model
 
 Prices surveyed 2026-07-23; re-check with `models` when it matters.

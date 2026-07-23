@@ -19,6 +19,12 @@ uv run "$SCRIPT" --png qr.png 10         # save the QR PNG to a chosen path
 
 Key: `$PPQ_API_KEY` → `~/.config/ppq/api-key` → `$OPENAI_API_KEY`.
 
+**No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
+uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:
+`pacman -S uv` / `brew install uv`), or run via `pipx run "$SCRIPT" …` (pipx
+≥1.4.2 reads the same inline dependency metadata). Don't fall back to bare
+`python3` — the only non-stdlib dependency (`qrcode`) won't be installed.
+
 ## How to run it as an agent
 
 1. **Check the balance first** — the user may not actually need a topup.
