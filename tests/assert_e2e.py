@@ -20,13 +20,13 @@ def main() -> int:
 
     ok = True
     log = pathlib.Path(log_file)
-    if log.exists() and log.read_text().strip():
+    if log.exists() and log.read_text(encoding="utf-8").strip():
         print("FAIL: commands escaped the allowed-tools grant (would have prompted):")
-        for line in log.read_text().splitlines():
+        for line in log.read_text(encoding="utf-8").splitlines():
             print("  " + line)
         ok = False
 
-    d = json.load(open(out_file))
+    d = json.load(open(out_file, encoding="utf-8"))  # Windows defaults to cp1252
     denials = d.get("permission_denials") or []
     if denials:
         print(f"FAIL: permission denials: {denials}")

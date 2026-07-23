@@ -8,6 +8,8 @@ allowed-tools:
   - Bash(bash ${CLAUDE_SKILL_DIR}/scripts/claude-ppq *)
   - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" *)
   - Bash(test -r ~/.config/ppq/api-key)
+  - Bash(bash */skills/setup/scripts/setup.sh status)
+  - Bash(echo $SHELL)
   - Skill(ppq:setup)
   - Skill(ppq:setup *)
 ---
@@ -63,10 +65,12 @@ own terminal; never execute it yourself.
 
 **Key hygiene & cross-skill calls**: to check whether a key is configured,
 run exactly `test -r ~/.config/ppq/api-key` (pre-approved; exit 0 = key
-present). NEVER open the key file with Read or `cat` — the key must never
-enter the conversation. And never run another skill's script from here
-(e.g. setup.sh — its grant isn't active in this turn): invoke the
-`ppq:setup` skill instead (`Skill(ppq:setup)` is pre-approved).
+present); for masked config + balance, the setup skill's read-only
+`bash <plugin>/skills/setup/scripts/setup.sh status` shape is pre-approved
+too. NEVER open the key file with Read or `cat` — the key must never enter
+the conversation. Anything that changes the account (`new`, `from-*`) goes
+through invoking the `ppq:setup` skill (`Skill(ppq:setup)` is pre-approved),
+not its script.
 Mid-flow questions (model choice, pricing tradeoffs): use the AskUserQuestion
 tool, not a turn-ending prose question — its answer returns as a tool result
 and the grant stays armed. No key configured → invoke `ppq:setup` in this
@@ -79,7 +83,8 @@ permanently: `ln -s "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" ~/.local/bin/`.
 
 ## Creating a per-model launcher
 
-Match the user's shell and OS — check `$SHELL` first:
+Match the user's shell and OS — your environment context usually names the
+shell already; if not, `echo $SHELL` is pre-approved:
 
 - **fish**: a function in `~/.config/fish/functions/claude-<name>.fish` with
   local `set -lx` exports so nothing leaks into the session; if one already
