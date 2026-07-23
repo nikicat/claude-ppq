@@ -1,6 +1,6 @@
 # ppq — a Claude Code plugin for ppq.ai
 
-Three skills for working with [ppq.ai](https://ppq.ai) (pay-per-query AI gateway,
+Four skills for working with [ppq.ai](https://ppq.ai) (pay-per-query AI gateway,
 Bitcoin-friendly) from Claude Code:
 
 | Skill | What it does |
@@ -30,6 +30,27 @@ working tree).
 
 `uv` is required for the bundled scripts (they're PEP 723 inline-dependency
 scripts — no venv or install step).
+
+## Permissions
+
+Each skill pre-approves its own bundled script via `allowed-tools` in its
+frontmatter, scoped to the exact script path (e.g.
+`Bash(bash ${CLAUDE_SKILL_DIR}/scripts/setup.sh *)`) — so invoking a skill
+doesn't trigger a Bash permission prompt. Notes:
+
+- Needs Claude Code ≥ 2.1.129 (`${CLAUDE_SKILL_DIR}` substitution); older
+  versions simply fall back to the normal prompt.
+- The grant lives exactly as long as the turn that invoked the skill, so the
+  skills keep multi-step flows inside one turn: mid-flow questions ("which
+  option?", "key copied?") use numbered-choice dialogs (the AskUserQuestion
+  tool), whose answers return as tool results without ending the turn — the
+  grant stays armed for the follow-up commands. A free-form reply on a later
+  turn falls back to a normal prompt.
+- Handoffs between ppq skills (setup → topup after account creation,
+  image/topup → setup on a 401) are pre-approved via `Skill(...)` entries in
+  the same grants, so they don't prompt when they happen within the turn.
+- Want the scripts allowed permanently, prompts never? Add the equivalent
+  allow rules with absolute paths to your `~/.claude/settings.json`.
 
 ## Direct CLI use (no Claude needed)
 

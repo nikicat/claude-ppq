@@ -2,6 +2,11 @@
 name: claude-code
 description: Run or configure Claude Code against ppq.ai models (Kimi, DeepSeek, GLM, Qwen, Grok, Gemini, cheaper Claude…). Use when the user wants to launch Claude Code on a ppq model, create a claude-<model> launcher/fish function, pick or price ppq models, or troubleshoot a ppq-backed Claude Code setup.
 argument-hint: "[model or task]"
+allowed-tools:
+  - Bash(${CLAUDE_SKILL_DIR}/scripts/claude-ppq *)
+  - Bash("${CLAUDE_SKILL_DIR}/scripts/claude-ppq" *)
+  - Skill(ppq:setup)
+  - Skill(ppq:setup *)
 ---
 
 # Claude Code on ppq.ai
@@ -26,14 +31,21 @@ etc.) fall through to real Opus via ppq at ~$10.55/$52.75 per 1M tokens.
 ## Ready-made launcher
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" -m moonshotai/kimi-k3 [claude args…]
-"${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" --models [filter]   # live catalog (no key needed)
+${CLAUDE_SKILL_DIR}/scripts/claude-ppq -m moonshotai/kimi-k3 [claude args…]
+${CLAUDE_SKILL_DIR}/scripts/claude-ppq --models [filter]   # live catalog (no key needed)
 ```
+
+Run these exactly as shown (one command, full path, nothing chained) — these
+shapes are pre-approved via `allowed-tools` for as long as this turn lasts.
+Mid-flow questions (model choice, pricing tradeoffs): use the AskUserQuestion
+tool, not a turn-ending prose question — its answer returns as a tool result
+and the grant stays armed. No key configured → invoke `ppq:setup` in this
+same turn (`Skill(ppq:setup)` is pre-approved here).
 
 Defaults (all env-overridable): model `$PPQ_MODEL` → `moonshotai/kimi-k3`, small
 `$PPQ_SMALL_MODEL` → `mistralai/mistral-nemo`, subagent tier `$PPQ_AGENT_MODEL` →
 `claude-sonnet-5`. Suggest symlinking it onto `PATH` if the user wants it
-permanently: `ln -s "${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" ~/.local/bin/`.
+permanently: `ln -s "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" ~/.local/bin/`.
 
 ## Creating a per-model launcher (user's convention: fish functions)
 

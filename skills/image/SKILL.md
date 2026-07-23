@@ -2,6 +2,15 @@
 name: image
 description: Generate, edit, or upscale images with ppq.ai models — text-to-image from a prompt, image-to-image editing/retouching/restyling of an existing photo, deterministic upscaling, background removal, SVG generation. Use whenever the user wants to create or transform an image (via ppq, or when no other image backend is configured).
 argument-hint: "[gen|edit|upscale|models] [prompt or file]"
+allowed-tools:
+  - Bash(uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py *)
+  - Bash(uv run "${CLAUDE_SKILL_DIR}/scripts/ppq_image.py" *)
+  - Bash(pipx run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py *)
+  - Bash(pipx run "${CLAUDE_SKILL_DIR}/scripts/ppq_image.py" *)
+  - Skill(ppq:setup)
+  - Skill(ppq:setup *)
+  - Skill(ppq:topup)
+  - Skill(ppq:topup *)
 ---
 
 # ppq.ai image generation
@@ -9,24 +18,33 @@ argument-hint: "[gen|edit|upscale|models] [prompt or file]"
 One self-contained script does everything (uv script — no install needed):
 
 ```bash
-SCRIPT="${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/ppq_image.py"
-uv run "$SCRIPT" gen "a red fox in fresh snow, golden hour" --ar 16:9 -o fox.png
-uv run "$SCRIPT" edit photo.jpg "restyle as a 1940s film-noir portrait" -o noir.jpg
-uv run "$SCRIPT" upscale small.jpg -o big.png
-uv run "$SCRIPT" models [filter]        # live catalog + prices (free, works without a key)
+uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py gen "a red fox in fresh snow, golden hour" --ar 16:9 -o fox.png
+uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py edit photo.jpg "restyle as a 1940s film-noir portrait" -o noir.jpg
+uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py upscale small.jpg -o big.png
+uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py models [filter]   # live catalog + prices (free, works without a key)
 ```
 
+Run these **exactly as shown** — one command, full script path, no `cd`, no
+`SCRIPT=` variable, nothing chained. These exact shapes are pre-approved
+(`allowed-tools`) for as long as this turn lasts; any other shape falls back
+to a normal permission prompt. **Keep iteration inside this one turn** —
+clarifying the prompt, picking between drafts, retrying: ask with the
+AskUserQuestion tool (numbered choices), whose answer returns as a tool result
+without ending the turn, so the grant stays armed. A prose question ends the
+turn and resets the grant.
+
 Key comes from `$PPQ_API_KEY` or `~/.config/ppq/api-key`. Every paid call prints
-`cost $…` — always relay the cost to the user. HTTP 402 = balance empty → use the
-`ppq:topup` skill. No key configured at all (or 401) → the `ppq:setup` skill can
-install one or create an anonymous account from scratch.
+`cost $…` — always relay the cost to the user. HTTP 402 = balance empty → invoke
+the `ppq:topup` skill; 401 or no key at all → the `ppq:setup` skill installs one
+or creates an anonymous account from scratch. Invoke either in this same turn —
+their `Skill(...)` calls are pre-approved here.
 
 **No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
 uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:
-`pacman -S uv` / `brew install uv`), or run via `pipx run "$SCRIPT" …` (pipx
-≥1.4.2 reads the same inline dependency metadata). Don't fall back to bare
-`python3` — the dependencies live in the script's inline metadata and won't be
-installed.
+`pacman -S uv` / `brew install uv`), or run via
+`pipx run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py …` (pipx ≥1.4.2 reads the
+same inline dependency metadata). Don't fall back to bare `python3` — the
+dependencies live in the script's inline metadata and won't be installed.
 
 ## Picking a model
 

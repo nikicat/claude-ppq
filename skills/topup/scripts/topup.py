@@ -16,8 +16,9 @@ nothing; only paying does. Lightning topups carry a ~5% bonus; invoices expire i
     uv run topup.py 25 --no-wait     # create + print, don't poll (for agents)
     uv run topup.py 25 --open        # also open the QR PNG in the image viewer
     uv run topup.py --png qr.png 25  # also save the QR as a PNG
-    uv run topup.py status <id>      # one-shot status check, no polling
-    uv run topup.py balance          # current balance in USD (free)
+    uv run topup.py status <id>          # one-shot status check, no polling
+    uv run topup.py status <id> --wait   # poll until paid/expired (for agents)
+    uv run topup.py balance              # current balance in USD (free)
 
 Key: $PPQ_API_KEY, else ~/.config/ppq/api-key, else $OPENAI_API_KEY.
 """
@@ -213,7 +214,8 @@ def main() -> int:
 
     no_wait = "--no-wait" in args
     open_qr = "--open" in args
-    args = [a for a in args if a not in ("--no-wait", "--open")]
+    wait = "--wait" in args
+    args = [a for a in args if a not in ("--no-wait", "--open", "--wait")]
     png = None
     if "--png" in args:
         i = args.index("--png")
@@ -226,6 +228,8 @@ def main() -> int:
         print(f"${bal:.2f}" if isinstance(bal, int | float) else json.dumps(resp, indent=2))
         return 0
     if len(args) >= 2 and args[0] == "status":
+        if wait:
+            return _poll_until_terminal(args[1])
         resp = _req(f"/topup/status/{args[1]}")
         state, raw = _classify(resp)
         print(f"{state} (status={raw!r})")
