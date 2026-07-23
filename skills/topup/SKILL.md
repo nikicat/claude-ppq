@@ -28,17 +28,17 @@ Key: `$PPQ_API_KEY` → `~/.config/ppq/api-key` → `$OPENAI_API_KEY`.
    skill — "run `/ppq:topup 10`" — never at a raw `uv run`/`!` shell command.
 4. Create the invoice with `--no-wait` (the default mode polls up to 16 min and
    would hang the Bash tool).
-5. **Relay the QR as text in your reply**: tool output is collapsed/cropped in
-   the UI, but your reply renders in full — so copy the ASCII QR from the script
-   output into a fenced code block, **character-for-character** (every `█▀▄` and
-   space matters; don't trim, reflow, or "tidy" it). The script prints the
-   expected `lines × chars` under the QR — check your copy matches before
-   sending. The QR uses M-level error correction, so it survives a stray slip,
-   but never reconstruct it from memory.
-6. Below the QR give the `lightning:…` URI in its own fenced block (wallets
-   accept it pasted), the invoice id, sats amount, and expiry. If the text QR
-   won't scan or the user prefers a window, re-run with `--open` (pops the QR
-   PNG in the image viewer; needs `$DISPLAY`/`$WAYLAND_DISPLAY`).
+5. **Point the user at the tool output for the QR**: the full QR is already
+   rendered in the collapsed Bash output — tell the user to press **ctrl+o**
+   (expand tool output) and scan it right from the terminal. Do NOT re-echo the
+   QR into your reply by default: streaming ~2k block characters is slow.
+   Fallbacks, in order: `--open` (pops the QR PNG in the image viewer; needs
+   `$DISPLAY`/`$WAYLAND_DISPLAY`), or — only if the user asks for the QR as
+   text — copy the ASCII QR into a fenced code block character-for-character
+   (never reconstruct it; the script prints `lines × chars` to check the copy,
+   and M-level error correction absorbs a stray slip).
+6. In your reply give: the ctrl+o hint, the `lightning:…` URI in its own fenced
+   block (wallets accept it pasted), the invoice id, sats amount, and expiry.
 7. Then poll `status <id>` in a background Bash loop (~10 s interval, stop at
    expiry) and report the outcome plainly: paid / expired / still pending.
 

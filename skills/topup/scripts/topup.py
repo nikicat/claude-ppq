@@ -150,7 +150,7 @@ def _show_qr(payload: str, png: str | None = None) -> None:
     print(text, end="")
     lines = text.splitlines()
     width = max(map(len, lines))
-    print(f"(QR: {len(lines)} lines × {width} chars — when relaying as text, copy it verbatim)")
+    print(f"(QR: {len(lines)} lines × {width} chars — if relaying as text, copy verbatim)")
     if png:
         # full 4-module quiet zone — phone scanners need the margin the terminal QR skips
         big = qrcode.QRCode(border=4, error_correction=ERROR_CORRECT_L)
