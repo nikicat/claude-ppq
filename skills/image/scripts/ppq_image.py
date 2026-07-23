@@ -8,7 +8,7 @@
     uv run ppq_image.py gen "a red fox in snow" [-m MODEL] [--ar 16:9] [-n 2] [-o out.png]
     uv run ppq_image.py edit photo.jpg "make it a noir portrait" [-m MODEL] [-o out.jpg]
     uv run ppq_image.py upscale small.jpg [-m topaz-upscale] [-o big.png]
-    uv run ppq_image.py models [filter]        # live catalog + per-image price (free)
+    uv run ppq_image.py models [filter]        # live catalog + per-image price (free, no key)
 
 Key: $PPQ_API_KEY, else ~/.config/ppq/api-key. Every paid call prints its cost.
 Endpoint: POST https://api.ppq.ai/v1/images/generations
@@ -35,7 +35,7 @@ UPSCALE_PROMPT = ("upscale to high resolution, enhance fine detail and sharpness
                   "preserve identity and content exactly")
 
 
-def key() -> str:
+def key_opt() -> str | None:
     k = os.environ.get("PPQ_API_KEY", "").strip()
     if k:
         return k
@@ -44,6 +44,13 @@ def key() -> str:
         k = open(p).read().strip()
         if k:
             return k
+    return None
+
+
+def key() -> str:
+    k = key_opt()
+    if k:
+        return k
     sys.exit("no ppq.ai key: set $PPQ_API_KEY or put it in ~/.config/ppq/api-key (chmod 600)")
 
 
@@ -136,7 +143,8 @@ def price_str(pricing: object) -> str:
 
 
 def cmd_models(filt: str | None, as_json: bool) -> None:
-    r = requests.get(MODELS_URL, headers={"Authorization": f"Bearer {key()}"}, timeout=60)
+    k = key_opt()  # the catalog is public — browse without a key, send one if present
+    r = requests.get(MODELS_URL, headers={"Authorization": f"Bearer {k}"} if k else {}, timeout=60)
     r.raise_for_status()
     items = r.json().get("data", [])
     if filt:

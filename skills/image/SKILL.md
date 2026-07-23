@@ -13,7 +13,7 @@ SCRIPT="${CLAUDE_PLUGIN_ROOT}/skills/image/scripts/ppq_image.py"
 uv run "$SCRIPT" gen "a red fox in fresh snow, golden hour" --ar 16:9 -o fox.png
 uv run "$SCRIPT" edit photo.jpg "restyle as a 1940s film-noir portrait" -o noir.jpg
 uv run "$SCRIPT" upscale small.jpg -o big.png
-uv run "$SCRIPT" models [filter]        # live catalog + per-image prices (free call)
+uv run "$SCRIPT" models [filter]        # live catalog + prices (free, works without a key)
 ```
 
 Key comes from `$PPQ_API_KEY` or `~/.config/ppq/api-key`. Every paid call prints

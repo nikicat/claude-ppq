@@ -8,6 +8,13 @@
 # Env overrides: PPQ_API_KEY, PPQ_MODEL, PPQ_SMALL_MODEL, PPQ_AGENT_MODEL.
 set -euo pipefail
 
+# The model catalog is public — browsing needs no key.
+if [[ ${1:-} == --models ]]; then
+  curl -s https://api.ppq.ai/models |
+    grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -i -- "${2:-}" | sort
+  exit
+fi
+
 # --- API key: $PPQ_API_KEY, else ~/.config/ppq/api-key -----------------------
 key="${PPQ_API_KEY:-}"
 key_file="$HOME/.config/ppq/api-key"
@@ -17,12 +24,6 @@ fi
 if [[ -z $key ]]; then
   echo "claude-ppq: no ppq.ai key. Put it in $key_file (chmod 600) or set \$PPQ_API_KEY." >&2
   exit 1
-fi
-
-if [[ ${1:-} == --models ]]; then
-  curl -s https://api.ppq.ai/models -H "Authorization: Bearer $key" |
-    grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -i -- "${2:-}" | sort
-  exit
 fi
 
 model="${PPQ_MODEL:-moonshotai/kimi-k3}"

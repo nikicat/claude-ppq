@@ -27,7 +27,7 @@ etc.) fall through to real Opus via ppq at ~$10.55/$52.75 per 1M tokens.
 
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" -m moonshotai/kimi-k3 [claude args…]
-"${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" --models [filter]   # live catalog
+"${CLAUDE_PLUGIN_ROOT}/skills/claude-code/scripts/claude-ppq" --models [filter]   # live catalog (no key needed)
 ```
 
 Defaults (all env-overridable): model `$PPQ_MODEL` → `moonshotai/kimi-k3`, small
