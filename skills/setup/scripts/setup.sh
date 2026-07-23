@@ -114,8 +114,11 @@ cmd_from_clipboard() {
     key="$(xclip -selection clipboard -o 2>/dev/null || true)"; clear_cmd="xclip -selection clipboard -i /dev/null"
   elif command -v pbpaste >/dev/null 2>&1; then
     key="$(pbpaste)"; clear_cmd="pbcopy </dev/null"
+  elif command -v powershell.exe >/dev/null 2>&1; then # Windows git-bash
+    key="$(powershell.exe -NoProfile -Command Get-Clipboard 2>/dev/null | tr -d '\r' || true)"
+    clear_cmd="powershell.exe -NoProfile -Command \"Set-Clipboard -Value ' '\""
   else
-    echo "no clipboard tool found (wl-paste / xclip / pbpaste)" >&2
+    echo "no clipboard tool found (wl-paste / xclip / pbpaste / powershell)" >&2
     exit 1
   fi
   install_key "$(tr -d '[:space:]' <<<"$key")"
