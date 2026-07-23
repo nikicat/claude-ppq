@@ -81,6 +81,10 @@ installed.
    permission prompts and, on Windows, a console window flashing at the user
    every time. One create call, one wait call, done. Report the outcome
    plainly: paid / expired / still pending.
+8. On success the wait output already ends with `new balance: $…` — relay
+   that; do **not** run a `balance` check afterwards. The background task
+   completes on a fresh turn where the permission grant has expired, so any
+   follow-up command prompts.
 
 ## Facts
 

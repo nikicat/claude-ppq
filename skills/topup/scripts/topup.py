@@ -196,6 +196,12 @@ def _poll_until_terminal(invoice_id: str) -> int:
         state, raw = _classify(resp)
         if state == "paid":
             print(f"\n✅ paid — balance topped up (status={raw!r}).")
+            try:  # spare the agent a follow-up call — it would land outside the permission grant
+                bal = _req("/credits/balance", "POST", {}).get("balance")
+                if isinstance(bal, int | float):
+                    print(f"new balance: ${bal:.2f}")
+            except Exception:
+                pass
             return 0
         if state == "dead":
             print(f"\n❌ {raw} — invoice will not settle.")
