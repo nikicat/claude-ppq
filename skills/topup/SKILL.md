@@ -19,7 +19,7 @@ One self-contained script behind a uv-locating launcher (no install needed):
 
 ```bash
 bash ${CLAUDE_SKILL_DIR}/scripts/topup balance                    # current balance in USD (free)
-bash ${CLAUDE_SKILL_DIR}/scripts/topup 10 --no-wait               # create a $10 invoice, print QR + link, exit
+bash ${CLAUDE_SKILL_DIR}/scripts/topup 10 --no-wait               # create a 10 USD invoice, print QR + link, exit
 bash ${CLAUDE_SKILL_DIR}/scripts/topup 10 --no-wait --png qr.png  # …and save the QR PNG (Read it → inline QR)
 bash ${CLAUDE_SKILL_DIR}/scripts/topup 10 --no-wait --open        # …or pop the PNG in the OS image viewer
 bash ${CLAUDE_SKILL_DIR}/scripts/topup status <id>                # one-shot check; exit 0 once paid
@@ -52,8 +52,8 @@ installed.
 ## How to run it as an agent
 
 1. **Check the balance first** — the user may not actually need a topup.
-2. Creating an invoice is **free**; only paying it costs anything. Default $10 if
-   the user didn't say an amount.
+2. Creating an invoice is **free**; only paying it costs anything. Default
+   10 USD if the user didn't say an amount.
 3. When you merely *suggest* topping up (low balance, 402), point the user at the
    skill — "run `/ppq:topup 10`" — never at a raw `uv run`/`!` shell command.
 4. Create the invoice with `--no-wait` (the default mode polls up to 16 min and

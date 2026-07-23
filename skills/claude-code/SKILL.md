@@ -28,7 +28,10 @@ launch:
 | `DISABLE_PROMPT_CACHING` | `1` — most ppq upstreams don't do Anthropic prompt caching | `1` |
 
 **Always pin the tier aliases**: otherwise model-pinned subagents (code-review,
-etc.) fall through to real Opus via ppq at ~$10.55/$52.75 per 1M tokens.
+etc.) fall through to real Opus via ppq at ~10.55/52.75 USD per 1M tokens.
+(Prices in this file are written without dollar signs deliberately: a literal
+dollar-digit sequence is a positional-argument placeholder in skill bodies
+and gets mangled at render time.)
 
 ## Ready-made launcher
 
@@ -106,10 +109,11 @@ length, and `privacyLevel` (`zdr` zero-data-retention > `e2e` TEE > `anon`)
 for every model, keyless. Check price and privacy before recommending. (Raw
 API only if the launcher is unavailable: `GET https://api.ppq.ai/v1/models`,
 keyless; pricing sits nested under `pricing.input_per_1M_tokens` /
-`pricing.output_per_1M_tokens`.) Reference points surveyed 2026-07:
-kimi-k3 $3.17/$15.82 (anon), claude-sonnet-5 $2.11/$10.55, claude-haiku-4.5
-$1.05/$5.28, deepseek-v4-pro $0.46/$0.92 (zdr), glm-5.2 $0.36/$1.12 (zdr),
-qwen3-coder-30b $0.07/$0.28 (zdr), grok-4.20 $1.32/$2.64 (2M ctx).
+`pricing.output_per_1M_tokens`.) Reference points surveyed 2026-07, in/out
+USD per 1M tokens: kimi-k3 3.17/15.82 (anon), claude-sonnet-5 2.11/10.55,
+claude-haiku-4.5 1.05/5.28, deepseek-v4-pro 0.46/0.92 (zdr), glm-5.2
+0.82/2.57 (zdr, 1M ctx), qwen3-coder-30b 0.07/0.28 (zdr), grok-4.20
+1.32/2.64 (2M ctx).
 
 ## Known quirks
 
