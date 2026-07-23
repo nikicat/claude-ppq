@@ -1,12 +1,18 @@
 {
   "name": "ppq",
-  "description": "Local marketplace for the ppq.ai toolkit plugin.",
-  "owner": { "name": "nb" },
+  "description": "Marketplace for the ppq.ai toolkit plugin.",
+  "owner": { "name": "Nikolay Bryskin" },
   "plugins": [
     {
       "name": "ppq",
       "source": "./",
-      "description": "ppq.ai toolkit: image gen/edit/upscale, Claude Code on ppq models, Lightning topups."
+      "description": "ppq.ai toolkit: image gen/edit/upscale, Claude Code on ppq models, Bitcoin Lightning topups, and zero-to-working account setup.",
+      "category": "development",
+      "keywords": ["ppq", "images", "image-generation", "lightning", "bitcoin", "anthropic-proxy"],
+      "homepage": "https://github.com/nikicat/claude-ppq",
+      "repository": "https://github.com/nikicat/claude-ppq",
+      "license": "MIT",
+      "author": { "name": "Nikolay Bryskin" }
     }
   ]
 }

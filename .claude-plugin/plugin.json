@@ -5,5 +5,6 @@
   "description": "Use ppq.ai from Claude Code: image generation/editing/upscaling, running Claude Code itself on ppq models, Bitcoin Lightning balance topups, and zero-to-working account setup.",
   "author": { "name": "Nikolay Bryskin" },
   "repository": "https://github.com/nikicat/claude-ppq",
+  "license": "MIT",
   "keywords": ["ppq", "images", "image-generation", "lightning", "bitcoin", "anthropic-proxy"]
 }
