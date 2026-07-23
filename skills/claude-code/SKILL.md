@@ -35,8 +35,9 @@ ${CLAUDE_SKILL_DIR}/scripts/claude-ppq -m moonshotai/kimi-k3 [claude args…]
 ${CLAUDE_SKILL_DIR}/scripts/claude-ppq --models [filter]   # live catalog (no key needed)
 ```
 
-Run these exactly as shown (one command, full path, nothing chained) — these
-shapes are pre-approved via `allowed-tools` for as long as this turn lasts.
+Run these exactly as shown (one command, full path copied byte-for-byte —
+keep Windows backslashes as printed — nothing chained) — these shapes are
+pre-approved via `allowed-tools` for as long as this turn lasts.
 Mid-flow questions (model choice, pricing tradeoffs): use the AskUserQuestion
 tool, not a turn-ending prose question — its answer returns as a tool result
 and the grant stays armed. No key configured → invoke `ppq:setup` in this

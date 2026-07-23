@@ -25,9 +25,11 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/topup.py --png qr.png 10        # save the QR
 ```
 
 Run these **exactly as shown** — one command, full script path, no `cd`, no
-`SCRIPT=` variable, nothing chained. These exact shapes are pre-approved
-(`allowed-tools`) for as long as this turn lasts; any other shape falls back
-to a normal permission prompt. **Keep the whole flow inside this one turn** —
+`SCRIPT=` variable, nothing chained, and the path copied byte-for-byte (keep
+Windows backslashes as printed — rewriting separators or re-quoting breaks the
+match). These exact shapes are pre-approved (`allowed-tools`) for as long as
+this turn lasts; any other shape falls back to a normal permission prompt.
+**Keep the whole flow inside this one turn** —
 need the user's input mid-flow (amount, confirmation)? Use the AskUserQuestion
 tool (numbered choices): its answer returns as a tool result, the turn
 continues, and the grant stays armed. A prose question ends the turn and
@@ -53,15 +55,19 @@ non-stdlib dependency (`qrcode`) won't be installed.
    skill — "run `/ppq:topup 10`" — never at a raw `uv run`/`!` shell command.
 4. Create the invoice with `--no-wait` (the default mode polls up to 16 min and
    would hang the Bash tool).
-5. **Point the user at the tool output for the QR**: the full QR is already
-   rendered in the collapsed Bash output — tell the user to press **ctrl+o**
-   (expand tool output) and scan it right from the terminal. Do NOT re-echo the
+5. **Getting the QR scanned.** In a real terminal the collapsed Bash output
+   already contains a scannable QR — tell the user to press **ctrl+o** (expand
+   tool output). But GUI surfaces (the Claude desktop app, editor panes)
+   render the half-block QR with gaps between lines, making it unscannable —
+   on Windows/macOS, or whenever the session may not be a real terminal,
+   create the invoice with `--open` instead: it saves the QR PNG and opens it
+   in the OS image viewer (Windows `startfile` / macOS `open` / Linux
+   `xdg-open`, which needs `$DISPLAY`/`$WAYLAND_DISPLAY`). Do NOT re-echo the
    QR into your reply by default: streaming ~2k block characters is slow.
-   Fallbacks, in order: `--open` (pops the QR PNG in the image viewer; needs
-   `$DISPLAY`/`$WAYLAND_DISPLAY`), or — only if the user asks for the QR as
-   text — copy the ASCII QR into a fenced code block character-for-character
-   (never reconstruct it; the script prints `lines × chars` to check the copy,
-   and M-level error correction absorbs a stray slip).
+   Last resort — only if the user asks for the QR as text — copy the ASCII QR
+   into a fenced code block character-for-character (never reconstruct it; the
+   script prints `lines × chars` to check the copy, and M-level error
+   correction absorbs a stray slip).
 6. In your reply give: the ctrl+o hint, the `lightning:…` URI in its own fenced
    block (wallets accept it pasted), the invoice id, sats amount, and expiry.
 7. Then run `status <id> --wait` as a **background** Bash call — the script

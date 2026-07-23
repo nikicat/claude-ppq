@@ -171,6 +171,10 @@ def _open_file(path: str) -> bool:
     import shutil
     import subprocess
 
+    startfile = getattr(os, "startfile", None)  # Windows-only
+    if startfile is not None:
+        startfile(os.path.abspath(path))
+        return True
     for cmd in ("xdg-open", "open"):
         exe = shutil.which(cmd)
         if exe:

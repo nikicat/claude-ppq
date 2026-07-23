@@ -25,9 +25,11 @@ uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py models [filter]   # live catalog
 ```
 
 Run these **exactly as shown** — one command, full script path, no `cd`, no
-`SCRIPT=` variable, nothing chained. These exact shapes are pre-approved
-(`allowed-tools`) for as long as this turn lasts; any other shape falls back
-to a normal permission prompt. **Keep iteration inside this one turn** —
+`SCRIPT=` variable, nothing chained, and the path copied byte-for-byte (keep
+Windows backslashes as printed — rewriting separators or re-quoting breaks the
+match). These exact shapes are pre-approved (`allowed-tools`) for as long as
+this turn lasts; any other shape falls back to a normal permission prompt.
+**Keep iteration inside this one turn** —
 clarifying the prompt, picking between drafts, retrying: ask with the
 AskUserQuestion tool (numbered choices), whose answer returns as a tool result
 without ending the turn, so the grant stays armed. A prose question ends the

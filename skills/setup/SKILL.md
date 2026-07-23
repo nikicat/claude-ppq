@@ -22,9 +22,10 @@ bash ${CLAUDE_SKILL_DIR}/scripts/setup.sh from-stdin        # read a key from st
 ```
 
 Run these **exactly as shown** — one command, full script path, no `cd`, no
-`SCRIPT=` variable, nothing chained. These exact shapes are pre-approved
-(`allowed-tools`) for as long as this turn lasts; any other shape falls back
-to a normal permission prompt.
+`SCRIPT=` variable, nothing chained, and the path copied byte-for-byte (keep
+Windows backslashes as printed — rewriting separators or re-quoting breaks the
+match). These exact shapes are pre-approved (`allowed-tools`) for as long as
+this turn lasts; any other shape falls back to a normal permission prompt.
 
 Files: `~/.config/ppq/api-key` and `~/.config/ppq/credit-id`, both chmod 600.
 
