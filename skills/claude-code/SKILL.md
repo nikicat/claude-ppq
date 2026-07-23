@@ -9,7 +9,14 @@ allowed-tools:
   - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" *)
   - Bash(test -r ~/.config/ppq/api-key)
   - Bash(bash */skills/setup/scripts/setup.sh status)
+  - Bash(bash "*/skills/setup/scripts/setup.sh" status)
+  - Bash(bash *\skills\setup\scripts\setup.sh status)
+  - Bash(bash "*\skills\setup\scripts\setup.sh" status)
   - Bash(echo $SHELL)
+  - Bash(powershell -ExecutionPolicy Bypass -File "*claude-ppq.ps1" --models)
+  - Bash(powershell -ExecutionPolicy Bypass -File "*claude-ppq.ps1" --models *)
+  - PowerShell(powershell -ExecutionPolicy Bypass -File "*claude-ppq.ps1" --models)
+  - PowerShell(powershell -ExecutionPolicy Bypass -File "*claude-ppq.ps1" --models *)
   - Skill(ppq:setup)
   - Skill(ppq:setup *)
 ---
@@ -60,8 +67,9 @@ Run these exactly as shown (one command, full path copied byte-for-byte —
 keep Windows backslashes as printed — nothing chained) — these shapes are
 pre-approved via `allowed-tools` for as long as this turn lasts. Your own
 calls go through the **Bash tool with the bash launcher on every OS,
-including Windows** — the `.ps1` exists solely to hand to the user for their
-own terminal; never execute it yourself.
+including Windows** — the `.ps1` exists to hand to the user for their own
+terminal; the only pre-approved way to run it yourself is its read-only
+`--models` check, never a session launch.
 
 **Key hygiene & cross-skill calls**: to check whether a key is configured,
 run exactly `test -r ~/.config/ppq/api-key` (pre-approved; exit 0 = key
