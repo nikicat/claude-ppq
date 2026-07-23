@@ -46,7 +46,10 @@ jobs:
 
       - name: claude-ppq --models lists prices (keyless)
         shell: bash
-        run: bash skills/claude-code/scripts/claude-ppq --models kimi | tee /dev/stderr | grep -q 'in=\$'
+        run: |
+          out=$(bash skills/claude-code/scripts/claude-ppq --models kimi)
+          echo "$out"
+          echo "$out" | grep -q 'in=\$'
 
       - name: claude-ppq.ps1 --models lists prices (Windows)
         if: runner.os == 'Windows'
