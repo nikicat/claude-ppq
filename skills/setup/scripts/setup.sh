@@ -111,7 +111,9 @@ cmd_from_clipboard() {
   if command -v wl-paste >/dev/null 2>&1; then
     key="$(wl-paste -n 2>/dev/null || true)"; clear_cmd="wl-copy --clear"
   elif command -v xclip >/dev/null 2>&1; then
-    key="$(xclip -selection clipboard -o 2>/dev/null || true)"; clear_cmd="xclip -selection clipboard -i /dev/null"
+    # the clearing xclip daemonizes to hold the selection; detach its fds so
+    # callers (CI steps, tool harnesses) don't wait on the inherited pipes
+    key="$(xclip -selection clipboard -o 2>/dev/null || true)"; clear_cmd="xclip -selection clipboard -i /dev/null >/dev/null 2>&1"
   elif command -v pbpaste >/dev/null 2>&1; then
     key="$(pbpaste)"; clear_cmd="pbcopy </dev/null"
   elif command -v powershell.exe >/dev/null 2>&1; then # Windows git-bash

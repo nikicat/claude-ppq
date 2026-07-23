@@ -9,7 +9,8 @@ S="skills/setup/scripts/setup.sh"
 copy() {
   if command -v pbcopy >/dev/null 2>&1; then printf '%s' "$1" | pbcopy
   elif command -v clip.exe >/dev/null 2>&1; then printf '%s' "$1" | clip.exe
-  elif command -v xclip >/dev/null 2>&1; then printf '%s' "$1" | xclip -selection clipboard -i
+  # xclip daemonizes to hold the selection; detach its fds or CI steps hang
+  elif command -v xclip >/dev/null 2>&1; then printf '%s' "$1" | xclip -selection clipboard -i >/dev/null 2>&1
   else echo "no clipboard tool available for the test" >&2; exit 1; fi
 }
 paste_() {
