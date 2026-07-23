@@ -18,7 +18,8 @@ uv run "$SCRIPT" models [filter]        # live catalog + prices (free, works wit
 
 Key comes from `$PPQ_API_KEY` or `~/.config/ppq/api-key`. Every paid call prints
 `cost $…` — always relay the cost to the user. HTTP 402 = balance empty → use the
-`ppq:topup` skill.
+`ppq:topup` skill. No key configured at all (or 401) → the `ppq:setup` skill can
+install one or create an anonymous account from scratch.
 
 **No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
 uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:

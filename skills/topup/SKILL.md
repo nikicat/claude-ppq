@@ -17,7 +17,8 @@ uv run "$SCRIPT" status <id>             # exit 0 once paid
 uv run "$SCRIPT" --png qr.png 10         # save the QR PNG to a chosen path
 ```
 
-Key: `$PPQ_API_KEY` → `~/.config/ppq/api-key` → `$OPENAI_API_KEY`.
+Key: `$PPQ_API_KEY` → `~/.config/ppq/api-key` → `$OPENAI_API_KEY`. No key at
+all → the `ppq:setup` skill (installs a key, or creates an anonymous account).
 
 **No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
 uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:

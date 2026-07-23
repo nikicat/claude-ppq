@@ -13,7 +13,7 @@ launch:
 | Env var | Meaning | Typical value |
 |---|---|---|
 | `ANTHROPIC_BASE_URL` | point Claude Code at ppq | `https://api.ppq.ai` |
-| `ANTHROPIC_AUTH_TOKEN` | ppq API key | from `~/.config/ppq/api-key` |
+| `ANTHROPIC_AUTH_TOKEN` | ppq API key | from `~/.config/ppq/api-key` (none? → `ppq:setup`) |
 | `ANTHROPIC_MODEL` | main model | e.g. `moonshotai/kimi-k3` |
 | `ANTHROPIC_SMALL_FAST_MODEL` | background tasks (titles, summaries) | cheap, e.g. `mistralai/mistral-nemo` |
 | `ANTHROPIC_DEFAULT_OPUS_MODEL` `ANTHROPIC_DEFAULT_SONNET_MODEL` | what tier-pinned subagents resolve to | e.g. `claude-sonnet-5` |
