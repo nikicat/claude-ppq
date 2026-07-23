@@ -1,0 +1,12 @@
+{
+  "name": "ppq",
+  "description": "Local marketplace for the ppq.ai toolkit plugin.",
+  "owner": { "name": "nb" },
+  "plugins": [
+    {
+      "name": "ppq",
+      "source": "./",
+      "description": "ppq.ai toolkit: image gen/edit/upscale, Claude Code on ppq models, Lightning topups."
+    }
+  ]
+}

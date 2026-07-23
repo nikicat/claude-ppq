@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Launch Claude Code on a ppq.ai model. ppq exposes a native Anthropic
+# /v1/messages endpoint, so Claude Code talks to it directly — no proxy.
+#
+#   claude-ppq [-m MODEL] [claude args...]   # default model: $PPQ_MODEL or moonshotai/kimi-k3
+#   claude-ppq --models [filter]             # list the live model catalog (free)
+#
+# Env overrides: PPQ_API_KEY, PPQ_MODEL, PPQ_SMALL_MODEL, PPQ_AGENT_MODEL.
+set -euo pipefail
+
+# --- API key: $PPQ_API_KEY, else ~/.config/ppq/api-key -----------------------
+key="${PPQ_API_KEY:-}"
+key_file="$HOME/.config/ppq/api-key"
+if [[ -z $key && -r $key_file ]]; then
+  key="$(tr -d '[:space:]' <"$key_file")"
+fi
+if [[ -z $key ]]; then
+  echo "claude-ppq: no ppq.ai key. Put it in $key_file (chmod 600) or set \$PPQ_API_KEY." >&2
+  exit 1
+fi
+
+if [[ ${1:-} == --models ]]; then
+  curl -s https://api.ppq.ai/models -H "Authorization: Bearer $key" |
+    grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -i -- "${2:-}" | sort
+  exit
+fi
+
+model="${PPQ_MODEL:-moonshotai/kimi-k3}"
+if [[ ${1:-} == -m || ${1:-} == --model ]]; then
+  model="${2:?claude-ppq: -m needs a model id}"
+  shift 2
+fi
+# Cheap model for background tasks (titles, summaries).
+small="${PPQ_SMALL_MODEL:-mistralai/mistral-nemo}"
+# Model for tier-pinned subagents (code-review etc.) — keep it cheaper than the
+# main model so heavy review agents don't pay premium rates.
+agent="${PPQ_AGENT_MODEL:-claude-sonnet-5}"
+
+export ANTHROPIC_BASE_URL=https://api.ppq.ai
+export ANTHROPIC_AUTH_TOKEN="$key"
+export ANTHROPIC_MODEL="$model"
+export ANTHROPIC_SMALL_FAST_MODEL="$small"
+# Pin the tier aliases so model-pinned subagents are predictable and don't fall
+# through to expensive defaults (opus via ppq is ~$10/$53 per 1M tokens).
+export ANTHROPIC_DEFAULT_OPUS_MODEL="$agent"
+export ANTHROPIC_DEFAULT_SONNET_MODEL="$agent"
+export ANTHROPIC_DEFAULT_HAIKU_MODEL="$small"
+# Most ppq upstreams don't support Anthropic prompt caching; skip cache pings.
+export DISABLE_PROMPT_CACHING=1
+
+exec claude "$@"
