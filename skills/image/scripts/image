@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Launcher: `bash …/scripts/image <args>` == `uv run ppq_image.py <args>`.
+# The Bash tool's environment can miss the user's real PATH (seen with WinGet
+# installs in the Windows desktop app), which pushes agents into chaining
+# `export PATH=…;` — breaking the allowed-tools pre-approval. Instead of
+# hardcoding install dirs, recover the real PATH from the OS: current PATH,
+# then a login shell (sources the user's profile), then on Windows the
+# registry-backed User+Machine Path.
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+
+find_tool() { # <name> -> absolute path on stdout, or rc 1
+  local t p winpath
+  t=$(command -v "$1" 2>/dev/null) && { echo "$t"; return; }
+  t=$(bash -lc "command -v $1" 2>/dev/null) && [ -n "$t" ] && { echo "$t"; return; }
+  if command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+    winpath=$(powershell.exe -NoProfile -Command \
+      "[Environment]::GetEnvironmentVariable('Path','User')+';'+[Environment]::GetEnvironmentVariable('Path','Machine')" \
+      2>/dev/null | tr -d '\r')
+    local IFS=';'
+    for p in $winpath; do
+      [ -n "$p" ] || continue
+      p=$(cygpath -u "$p" 2>/dev/null) || continue
+      [ -x "$p/$1.exe" ] && { echo "$p/$1.exe"; return; }
+      [ -x "$p/$1" ] && { echo "$p/$1"; return; }
+    done
+  fi
+  return 1
+}
+
+if uv=$(find_tool uv); then
+  exec "$uv" run "$here/ppq_image.py" "$@"
+fi
+if pipx=$(find_tool pipx); then
+  exec "$pipx" run "$here/ppq_image.py" "$@"
+fi
+echo "error: neither uv nor pipx found. Install uv:" >&2
+echo "  curl -LsSf https://astral.sh/uv/install.sh | sh   # or: winget install astral-sh.uv / pacman -S uv / brew install uv" >&2
+exit 1

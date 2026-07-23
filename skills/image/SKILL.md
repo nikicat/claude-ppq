@@ -3,6 +3,8 @@ name: image
 description: Generate, edit, or upscale images with ppq.ai models — text-to-image from a prompt, image-to-image editing/retouching/restyling of an existing photo, deterministic upscaling, background removal, SVG generation. Use whenever the user wants to create or transform an image (via ppq, or when no other image backend is configured).
 argument-hint: "[gen|edit|upscale|models] [prompt or file]"
 allowed-tools:
+  - Bash(bash ${CLAUDE_SKILL_DIR}/scripts/image *)
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/image" *)
   - Bash(uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py *)
   - Bash(uv run "${CLAUDE_SKILL_DIR}/scripts/ppq_image.py" *)
   - Bash(pipx run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py *)
@@ -15,13 +17,13 @@ allowed-tools:
 
 # ppq.ai image generation
 
-One self-contained script does everything (uv script — no install needed):
+One self-contained script behind a uv-locating launcher (no install needed):
 
 ```bash
-uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py gen "a red fox in fresh snow, golden hour" --ar 16:9 -o fox.png
-uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py edit photo.jpg "restyle as a 1940s film-noir portrait" -o noir.jpg
-uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py upscale small.jpg -o big.png
-uv run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py models [filter]   # live catalog + prices (free, works without a key)
+bash ${CLAUDE_SKILL_DIR}/scripts/image gen "a red fox in fresh snow, golden hour" --ar 16:9 -o fox.png
+bash ${CLAUDE_SKILL_DIR}/scripts/image edit photo.jpg "restyle as a 1940s film-noir portrait" -o noir.jpg
+bash ${CLAUDE_SKILL_DIR}/scripts/image upscale small.jpg -o big.png
+bash ${CLAUDE_SKILL_DIR}/scripts/image models [filter]   # live catalog + prices (free, works without a key)
 ```
 
 Run these **exactly as shown** — one command, full script path, no `cd`, no
@@ -41,12 +43,13 @@ the `ppq:topup` skill; 401 or no key at all → the `ppq:setup` skill installs o
 or creates an anonymous account from scratch. Invoke either in this same turn —
 their `Skill(...)` calls are pre-approved here.
 
-**No `uv`?** If `uv run` fails with command-not-found, offer two fixes: install
-uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or the distro package:
-`pacman -S uv` / `brew install uv`), or run via
-`pipx run ${CLAUDE_SKILL_DIR}/scripts/ppq_image.py …` (pipx ≥1.4.2 reads the
-same inline dependency metadata). Don't fall back to bare `python3` — the
-dependencies live in the script's inline metadata and won't be installed.
+The launcher finds `uv` even when it's off the Bash tool's PATH (it checks a
+login shell, then on Windows the registry-backed Path) and falls back to
+`pipx`. **Never prefix `export PATH=…;` or any other setup command** —
+chaining breaks the pre-approved match and triggers a permission prompt. If
+the launcher reports that neither uv nor pipx exists, relay its install
+hints; don't fall back to bare `python3` — the dependencies live in the
+script's inline metadata and won't be installed.
 
 ## Picking a model
 

@@ -1,7 +1,7 @@
 {
   "name": "ppq",
   "displayName": "ppq.ai",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Use ppq.ai from Claude Code: image generation/editing/upscaling, running Claude Code itself on ppq models, Bitcoin Lightning balance topups, and zero-to-working account setup.",
   "author": { "name": "Nikolay Bryskin" },
   "repository": "https://github.com/nikicat/claude-ppq",
