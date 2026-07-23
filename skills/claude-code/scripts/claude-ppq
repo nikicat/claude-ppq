@@ -3,15 +3,64 @@
 # /v1/messages endpoint, so Claude Code talks to it directly — no proxy.
 #
 #   claude-ppq [-m MODEL] [claude args...]   # default model: $PPQ_MODEL or moonshotai/kimi-k3
-#   claude-ppq --models [filter]             # list the live model catalog (free)
+#   claude-ppq --models [filter]             # live catalog with prices/ctx/privacy (no key needed)
 #
 # Env overrides: PPQ_API_KEY, PPQ_MODEL, PPQ_SMALL_MODEL, PPQ_AGENT_MODEL.
+# Native Windows terminals (PowerShell/cmd) should use claude-ppq.ps1 instead.
 set -euo pipefail
+
+find_tool() { # <name> -> absolute path on stdout, or rc 1 (see scripts/topup for rationale)
+  local t p winpath
+  t=$(command -v "$1" 2>/dev/null) && { echo "$t"; return; }
+  t=$(bash -lc "command -v $1" 2>/dev/null) && [ -n "$t" ] && { echo "$t"; return; }
+  if command -v powershell.exe >/dev/null 2>&1 && command -v cygpath >/dev/null 2>&1; then
+    winpath=$(powershell.exe -NoProfile -Command \
+      "[Environment]::GetEnvironmentVariable('Path','User')+';'+[Environment]::GetEnvironmentVariable('Path','Machine')" \
+      2>/dev/null | tr -d '\r')
+    local IFS=';'
+    for p in $winpath; do
+      [ -n "$p" ] || continue
+      p=$(cygpath -u "$p" 2>/dev/null) || continue
+      [ -x "$p/$1.exe" ] && { echo "$p/$1.exe"; return; }
+      [ -x "$p/$1" ] && { echo "$p/$1"; return; }
+    done
+  fi
+  return 1
+}
 
 # The model catalog is public — browsing needs no key.
 if [[ ${1:-} == --models ]]; then
-  curl -s https://api.ppq.ai/models |
-    grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -i -- "${2:-}" | sort
+  filter="${2:-}"
+  json="$(curl -s https://api.ppq.ai/v1/models)"
+  # shellcheck disable=SC2016  # the $ belongs to the python f-string, not bash
+  prog='
+import json, sys
+rows = json.load(sys.stdin)
+rows = rows.get("data", rows) if isinstance(rows, dict) else rows
+flt = (sys.argv[1] if len(sys.argv) > 1 else "").lower()
+for m in sorted(rows, key=lambda m: m.get("id", "")):
+    mid = m.get("id", "")
+    if flt and flt not in mid.lower():
+        continue
+    p = m.get("pricing") or {}
+    pin, pout = p.get("input_per_1M_tokens", "?"), p.get("output_per_1M_tokens", "?")
+    ctx, priv = m.get("context_length", "?"), m.get("privacyLevel", "?")
+    print(f"{mid:40} in=${pin}/1M out=${pout}/1M ctx={ctx} priv={priv}")
+'
+  # A working python is not a given (stock Windows ships a Store stub that
+  # fails with "Python was not found") — validate before trusting one.
+  for py in python3 python; do
+    if [[ "$("$py" -c 'print("ok")' 2>/dev/null)" == ok ]]; then
+      printf '%s' "$json" | "$py" -c "$prog" "$filter"
+      exit
+    fi
+  done
+  if uv=$(find_tool uv); then
+    printf '%s' "$json" | "$uv" run python -c "$prog" "$filter"
+    exit
+  fi
+  # last resort: plain id list
+  printf '%s' "$json" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | grep -i -- "$filter" | sort
   exit
 fi
 

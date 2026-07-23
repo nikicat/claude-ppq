@@ -1,0 +1,86 @@
+name: e2e
+
+# Real Claude Code driving the skills headlessly on all three OSes.
+# Costs API tokens — runs on manual dispatch and a weekly cron only.
+# Needs the ANTHROPIC_API_KEY repo secret; jobs no-op without it.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+jobs:
+  e2e:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      E2E_MODEL: claude-haiku-4-5-20251001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: skip without secret
+        shell: bash
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "no ANTHROPIC_API_KEY secret — skipping e2e" && echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: install Claude Code + plugin
+        if: env.SKIP != '1'
+        shell: bash
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin marketplace add "$PWD"
+          claude plugin install ppq@ppq
+
+      # Headless -p runs use default permissions and cannot answer prompts, so
+      # any command outside the allowed-tools grant fails the run — that makes
+      # permission regressions (the Windows PATH-chaining bug class) testable.
+      - name: e2e /ppq:setup status
+        if: env.SKIP != '1'
+        shell: bash
+        run: |
+          claude -p "/ppq:setup status" --model "$E2E_MODEL" --output-format json | tee setup.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("setup.json"))
+          denials = d.get("permission_denials") or []
+          assert not denials, f"permission denials: {denials}"
+          text = (d.get("result") or "").lower()
+          assert "key" in text, f"unexpected result: {text[:400]}"
+          EOF
+
+      - name: e2e /ppq:image models (uv launcher path)
+        if: env.SKIP != '1'
+        shell: bash
+        run: |
+          claude -p "/ppq:image models banana — list the nano-banana models with prices" \
+            --model "$E2E_MODEL" --output-format json | tee image.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("image.json"))
+          denials = d.get("permission_denials") or []
+          assert not denials, f"permission denials: {denials}"
+          text = (d.get("result") or "").lower()
+          assert "banana" in text, f"unexpected result: {text[:400]}"
+          EOF
+
+      - name: e2e /ppq:claude-code model catalog
+        if: env.SKIP != '1'
+        shell: bash
+        run: |
+          claude -p "/ppq:claude-code list the kimi models with prices" \
+            --model "$E2E_MODEL" --output-format json | tee cc.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("cc.json"))
+          denials = d.get("permission_denials") or []
+          assert not denials, f"permission denials: {denials}"
+          text = (d.get("result") or "").lower()
+          assert "kimi" in text, f"unexpected result: {text[:400]}"
+          EOF

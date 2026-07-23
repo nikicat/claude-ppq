@@ -5,6 +5,8 @@ argument-hint: "[model or task]"
 allowed-tools:
   - Bash(${CLAUDE_SKILL_DIR}/scripts/claude-ppq *)
   - Bash("${CLAUDE_SKILL_DIR}/scripts/claude-ppq" *)
+  - Bash(bash ${CLAUDE_SKILL_DIR}/scripts/claude-ppq *)
+  - Bash(bash "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" *)
   - Skill(ppq:setup)
   - Skill(ppq:setup *)
 ---
@@ -32,8 +34,21 @@ etc.) fall through to real Opus via ppq at ~$10.55/$52.75 per 1M tokens.
 
 ```bash
 ${CLAUDE_SKILL_DIR}/scripts/claude-ppq -m moonshotai/kimi-k3 [claude args…]
-${CLAUDE_SKILL_DIR}/scripts/claude-ppq --models [filter]   # live catalog (no key needed)
+${CLAUDE_SKILL_DIR}/scripts/claude-ppq --models [filter]   # catalog with prices/ctx/privacy (no key needed)
 ```
+
+**All model info comes from `--models`** — id, in/out price per 1M, context
+length, privacy level. Never hand-roll `curl https://api.ppq.ai/…` plus
+`python3`/`node` parsing: stock Windows has no python3 (a Store stub that
+errors), hand-rolled commands aren't pre-approved (permission prompt every
+time), and the API key must never appear inside a command line.
+
+**Telling the user to launch it in their own terminal**: on POSIX shells give
+the bash script path as-is; on Windows the user's terminal is
+PowerShell/cmd, where the bash script just opens in a text editor — give
+them instead:
+`powershell -ExecutionPolicy Bypass -File "<skill dir>\scripts\claude-ppq.ps1" -m <model>`
+(same flags, including `--models`).
 
 Run these exactly as shown (one command, full path copied byte-for-byte —
 keep Windows backslashes as printed — nothing chained) — these shapes are
@@ -48,14 +63,21 @@ Defaults (all env-overridable): model `$PPQ_MODEL` → `moonshotai/kimi-k3`, sma
 `claude-sonnet-5`. Suggest symlinking it onto `PATH` if the user wants it
 permanently: `ln -s "${CLAUDE_SKILL_DIR}/scripts/claude-ppq" ~/.local/bin/`.
 
-## Creating a per-model launcher (user's convention: fish functions)
+## Creating a per-model launcher
 
-The user keeps launchers as fish functions like
-`~/.config/fish/functions/claude-kimi.fish` — read that file and copy its shape
-when asked for a new `claude-<name>`: local `set -lx` exports (so nothing leaks
-into the session), key from `$PPQ_API_KEY` or `~/.config/ppq/api-key`,
-`--models` passthrough, model overridable via `$PPQ_MODEL`. For a new model,
-change the `model` default (and reconsider the small/agent models' prices).
+Match the user's shell and OS — check `$SHELL` first:
+
+- **fish**: a function in `~/.config/fish/functions/claude-<name>.fish` with
+  local `set -lx` exports so nothing leaks into the session; if one already
+  exists (e.g. `claude-kimi.fish`), read it and copy its shape.
+- **bash/zsh**: a function in the rc file, or a `claude-ppq` symlink on PATH
+  plus `PPQ_MODEL=<model>`.
+- **Windows**: a PowerShell function in `$PROFILE` wrapping
+  `claude-ppq.ps1 -m <model>`.
+
+Whatever the shell: key from `$PPQ_API_KEY` or `~/.config/ppq/api-key`, model
+overridable via `$PPQ_MODEL`, and for a new model reconsider the small/agent
+models' prices.
 
 ## Alternative: per-project settings.json
 
@@ -79,10 +101,12 @@ Never write the API key into a settings file that might be committed —
 
 ## Picking a model
 
-`GET https://api.ppq.ai/v1/models` (bearer) returns pricing
-(`input_per_1M_tokens` / `output_per_1M_tokens`), `context_length`, and
-`privacyLevel` (`zdr` zero-data-retention > `e2e` TEE > `anon`) — check price
-and privacy before recommending. Reference points surveyed 2026-07:
+Run `--models [filter]` — it prints price (in/out per 1M tokens), context
+length, and `privacyLevel` (`zdr` zero-data-retention > `e2e` TEE > `anon`)
+for every model, keyless. Check price and privacy before recommending. (Raw
+API only if the launcher is unavailable: `GET https://api.ppq.ai/v1/models`,
+keyless; pricing sits nested under `pricing.input_per_1M_tokens` /
+`pricing.output_per_1M_tokens`.) Reference points surveyed 2026-07:
 kimi-k3 $3.17/$15.82 (anon), claude-sonnet-5 $2.11/$10.55, claude-haiku-4.5
 $1.05/$5.28, deepseek-v4-pro $0.46/$0.92 (zdr), glm-5.2 $0.36/$1.12 (zdr),
 qwen3-coder-30b $0.07/$0.28 (zdr), grok-4.20 $1.32/$2.64 (2M ctx).

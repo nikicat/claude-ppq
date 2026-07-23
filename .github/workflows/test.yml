@@ -44,6 +44,18 @@ jobs:
             echo "expected a clean failure without an API key"; exit 1
           fi
 
+      - name: claude-ppq --models lists prices (keyless)
+        shell: bash
+        run: bash skills/claude-code/scripts/claude-ppq --models kimi | tee /dev/stderr | grep -q 'in=\$'
+
+      - name: claude-ppq.ps1 --models lists prices (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $out = & ./skills/claude-code/scripts/claude-ppq.ps1 --models kimi
+          $out
+          if (-not ($out -match 'in=\$')) { throw 'no pricing in ps1 output' }
+
       # Reproduces the Windows desktop-app failure: uv reachable only through
       # the registry-backed User Path, not the process PATH.
       - name: plant uv on the registry Path only (Windows)
