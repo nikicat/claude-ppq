@@ -1,0 +1,65 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck bundled scripts
+        run: shellcheck skills/topup/scripts/topup skills/image/scripts/image skills/setup/scripts/setup.sh skills/claude-code/scripts/claude-ppq
+      - name: validate plugin + marketplace manifests
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          claude plugin validate .
+
+  scripts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: launchers find uv on PATH (deps resolve, scripts import)
+        shell: bash
+        run: |
+          bash skills/topup/scripts/topup --help
+          bash skills/image/scripts/image --help
+
+      - name: setup.sh works on a bare machine
+        shell: bash
+        run: bash skills/setup/scripts/setup.sh status
+
+      - name: topup without a key fails cleanly (not a crash)
+        shell: bash
+        run: |
+          if bash skills/topup/scripts/topup balance; then
+            echo "expected a clean failure without an API key"; exit 1
+          fi
+
+      # Reproduces the Windows desktop-app failure: uv reachable only through
+      # the registry-backed User Path, not the process PATH.
+      - name: plant uv on the registry Path only (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force C:\uv-offpath | Out-Null
+          Copy-Item (Get-Command uv).Source C:\uv-offpath\uv.exe
+          [Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';C:\uv-offpath', 'User')
+
+      - name: launcher finds uv with PATH stripped (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          uvdir=$(dirname "$(command -v uv)")
+          PATH=$(echo "$PATH" | tr ':' '\n' | grep -vxF "$uvdir" | paste -sd: -)
+          export PATH
+          if command -v uv; then echo "uv still on PATH — test setup invalid"; exit 1; fi
+          bash skills/topup/scripts/topup --help
