@@ -1,8 +1,19 @@
 name: e2e
 
 # Real Claude Code driving the skills headlessly on all three OSes.
-# Costs API tokens — runs on manual dispatch and a weekly cron only.
-# Needs the ANTHROPIC_API_KEY repo secret; jobs no-op without it.
+# Costs API tokens — manual dispatch + weekly cron. Repo secrets (one of the
+# first two is required):
+#   CLAUDE_CODE_OAUTH_TOKEN — from `claude setup-token`; bills the Claude
+#                             subscription, no Console account needed
+#   ANTHROPIC_API_KEY       — Console API key (platform.claude.com)
+#   PPQ_API_KEY  (optional) — low-balance ppq test account; enables the
+#                             live launcher run through api.ppq.ai
+#
+# Permission checking: every run registers tests/recorder.py as the
+# --permission-prompt-tool. Claude Code consults it only when the normal flow
+# would have shown an interactive prompt, so pre-approved (allowed-tools)
+# commands never appear in the log. Tests assert the log stays empty — a
+# non-empty log fails the step and prints the exact escaped commands.
 
 on:
   workflow_dispatch:
@@ -18,6 +29,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      PPQ_API_KEY: ${{ secrets.PPQ_API_KEY }}
       E2E_MODEL: claude-haiku-4-5-20251001
     steps:
       - uses: actions/checkout@v4
@@ -26,61 +39,95 @@ jobs:
       - name: skip without secret
         shell: bash
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "no ANTHROPIC_API_KEY secret — skipping e2e" && echo "SKIP=1" >> "$GITHUB_ENV"
+          if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "no ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN secret — skipping e2e"
+            echo "SKIP=1" >> "$GITHUB_ENV"
           fi
 
-      - name: install Claude Code + plugin
+      - name: install Claude Code + plugin, wire the recorder
         if: env.SKIP != '1'
         shell: bash
         run: |
           npm install -g @anthropic-ai/claude-code
-          claude plugin marketplace add "$PWD"
+          root=$(pwd -W 2>/dev/null || pwd)   # forward-slash Windows path in git-bash
+          claude plugin marketplace add "$root"
           claude plugin install ppq@ppq
+          printf '{"mcpServers":{"recorder":{"command":"uv","args":["run","%s/tests/recorder.py"]}}}' "$root" > mcp.json
+          echo "PERM_LOG=$root/perm.jsonl" >> "$GITHUB_ENV"
 
-      # Headless -p runs use default permissions and cannot answer prompts, so
-      # any command outside the allowed-tools grant fails the run — that makes
-      # permission regressions (the Windows PATH-chaining bug class) testable.
       - name: e2e /ppq:setup status
         if: env.SKIP != '1'
         shell: bash
         run: |
-          claude -p "/ppq:setup status" --model "$E2E_MODEL" --output-format json | tee setup.json
-          python3 - <<'EOF'
-          import json
-          d = json.load(open("setup.json"))
-          denials = d.get("permission_denials") or []
-          assert not denials, f"permission denials: {denials}"
-          text = (d.get("result") or "").lower()
-          assert "key" in text, f"unexpected result: {text[:400]}"
-          EOF
+          rm -f "$PERM_LOG"
+          claude -p "/ppq:setup status" --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > setup.json
+          python3 tests/assert_e2e.py setup.json "$PERM_LOG" "key"
 
       - name: e2e /ppq:image models (uv launcher path)
         if: env.SKIP != '1'
         shell: bash
         run: |
+          rm -f "$PERM_LOG"
           claude -p "/ppq:image models banana — list the nano-banana models with prices" \
-            --model "$E2E_MODEL" --output-format json | tee image.json
-          python3 - <<'EOF'
-          import json
-          d = json.load(open("image.json"))
-          denials = d.get("permission_denials") or []
-          assert not denials, f"permission denials: {denials}"
-          text = (d.get("result") or "").lower()
-          assert "banana" in text, f"unexpected result: {text[:400]}"
-          EOF
+            --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > image.json
+          python3 tests/assert_e2e.py image.json "$PERM_LOG" "banana"
 
-      - name: e2e /ppq:claude-code model catalog
+      - name: e2e /ppq:claude-code model catalog with prices
         if: env.SKIP != '1'
         shell: bash
         run: |
-          claude -p "/ppq:claude-code list the kimi models with prices" \
-            --model "$E2E_MODEL" --output-format json | tee cc.json
-          python3 - <<'EOF'
-          import json
-          d = json.load(open("cc.json"))
-          denials = d.get("permission_denials") or []
-          assert not denials, f"permission denials: {denials}"
-          text = (d.get("result") or "").lower()
-          assert "kimi" in text, f"unexpected result: {text[:400]}"
-          EOF
+          rm -f "$PERM_LOG"
+          claude -p "/ppq:claude-code list the kimi models with their prices" \
+            --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > cc.json
+          python3 tests/assert_e2e.py cc.json "$PERM_LOG" "kimi"
+
+      # The skill must hand the user an OS-appropriate terminal command:
+      # the .ps1 on Windows (never a fish function), the bash script on POSIX.
+      - name: e2e /ppq:claude-code terminal handoff (Windows)
+        if: env.SKIP != '1' && runner.os == 'Windows'
+        shell: bash
+        run: |
+          rm -f "$PERM_LOG"
+          claude -p "/ppq:claude-code I want to run Claude Code on glm-5.2. Give me the exact command to run in my own terminal." \
+            --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > handoff.json
+          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" "claude-ppq.ps1" "fish"
+
+      - name: e2e /ppq:claude-code terminal handoff (POSIX)
+        if: env.SKIP != '1' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          rm -f "$PERM_LOG"
+          claude -p "/ppq:claude-code I want to run Claude Code on glm-5.2. Give me the exact command to run in my own terminal." \
+            --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > handoff.json
+          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" "scripts/claude-ppq"
+
+      # The launcher's core promise: it actually boots Claude Code against ppq.
+      # Runs only with a funded PPQ_API_KEY test account; uses the cheapest model.
+      - name: launcher boots Claude Code on ppq (POSIX)
+        if: env.SKIP != '1' && env.PPQ_API_KEY != '' && runner.os != 'Windows'
+        shell: bash
+        run: |
+          out=$(env -u ANTHROPIC_API_KEY -u CLAUDE_CODE_OAUTH_TOKEN bash skills/claude-code/scripts/claude-ppq \
+            -m mistralai/mistral-nemo -p "Reply with exactly one word: pong")
+          echo "$out"
+          echo "$out" | grep -qi pong
+
+      - name: launcher boots Claude Code on ppq (Windows, .ps1)
+        if: env.SKIP != '1' && env.PPQ_API_KEY != '' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
+          Remove-Item Env:CLAUDE_CODE_OAUTH_TOKEN -ErrorAction SilentlyContinue
+          $out = & ./skills/claude-code/scripts/claude-ppq.ps1 -m mistralai/mistral-nemo -p "Reply with exactly one word: pong"
+          $out
+          if (-not ($out -match 'pong')) { throw 'launcher run did not answer pong' }
