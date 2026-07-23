@@ -63,7 +63,7 @@ jobs:
           claude -p "/ppq:setup status" --model "$E2E_MODEL" \
             --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
             --output-format json > setup.json
-          python3 tests/assert_e2e.py setup.json "$PERM_LOG" "key"
+          python3 tests/assert_e2e.py setup.json "$PERM_LOG" --expect key
 
       - name: e2e /ppq:image models (uv launcher path)
         if: env.SKIP != '1'
@@ -74,7 +74,7 @@ jobs:
             --model "$E2E_MODEL" \
             --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
             --output-format json > image.json
-          python3 tests/assert_e2e.py image.json "$PERM_LOG" "banana"
+          python3 tests/assert_e2e.py image.json "$PERM_LOG" --expect banana
 
       - name: e2e /ppq:claude-code model catalog with prices
         if: env.SKIP != '1'
@@ -85,7 +85,22 @@ jobs:
             --model "$E2E_MODEL" \
             --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
             --output-format json > cc.json
-          python3 tests/assert_e2e.py cc.json "$PERM_LOG" "kimi"
+          python3 tests/assert_e2e.py cc.json "$PERM_LOG" --expect kimi
+
+      # Follow-up turn: the allowed-tools grant has expired, so exactly one
+      # approval is acceptable — and it must be the launcher, never curl.
+      - name: e2e /ppq:claude-code follow-up turn prefers the launcher
+        if: env.SKIP != '1'
+        shell: bash
+        run: |
+          rm -f "$PERM_LOG"
+          claude -p "/ppq:claude-code list the glm models with prices" --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > t1.json
+          claude --continue -p "now also show the kimi models with prices" --model "$E2E_MODEL" \
+            --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
+            --output-format json > t2.json
+          python3 tests/assert_e2e.py t2.json "$PERM_LOG" --expect kimi --escapes-allowed claude-ppq --escapes-forbid curl
 
       # The skill must hand the user an OS-appropriate terminal command:
       # the .ps1 on Windows (never a fish function), the bash script on POSIX.
@@ -98,7 +113,7 @@ jobs:
             --model "$E2E_MODEL" \
             --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
             --output-format json > handoff.json
-          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" "claude-ppq.ps1" "fish"
+          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" --expect claude-ppq.ps1 --forbid fish
 
       - name: e2e /ppq:claude-code terminal handoff (POSIX)
         if: env.SKIP != '1' && runner.os != 'Windows'
@@ -109,7 +124,7 @@ jobs:
             --model "$E2E_MODEL" \
             --mcp-config mcp.json --permission-prompt-tool mcp__recorder__approve \
             --output-format json > handoff.json
-          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" "scripts/claude-ppq"
+          python3 tests/assert_e2e.py handoff.json "$PERM_LOG" --expect scripts/claude-ppq
 
       # The launcher's core promise: it actually boots Claude Code against ppq.
       # Runs only with a funded PPQ_API_KEY test account; uses the cheapest model.
