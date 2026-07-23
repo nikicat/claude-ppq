@@ -57,6 +57,36 @@ doesn't trigger a Bash permission prompt. Notes:
   by this repo's e2e workflow). Tracked upstream:
   [anthropics/claude-code#80696](https://github.com/anthropics/claude-code/issues/80696).
 
+## Using with OpenAI Codex CLI
+
+The same repo installs into Codex CLI (≥0.145) — it ships a `.codex-plugin`
+manifest alongside the Claude one, sharing the same skills and scripts:
+
+```
+codex plugin marketplace add nikicat/claude-ppq   # or a local checkout path
+codex plugin add ppq@ppq-repo
+```
+
+Skills are then available as `$setup`, `$topup`, `$image`, `$claude-code`
+(model-invoked or explicit). Bonus: ppq can power Codex itself — it serves
+the OpenAI Responses API natively:
+
+```toml
+# ~/.codex/config.toml
+model = "z-ai/glm-4.7"
+model_provider = "ppq"
+
+[model_providers.ppq]
+name = "ppq.ai"
+base_url = "https://api.ppq.ai/v1"
+env_key = "PPQ_API_KEY"
+wire_api = "responses"
+```
+
+(Claude-specific passages in the skills — `allowed-tools` grants,
+AskUserQuestion — don't apply under Codex; approvals follow Codex's own
+sandbox/approval policy. Validated continuously by the `codex-e2e` workflow.)
+
 ## Direct CLI use (no Claude needed)
 
 ```bash

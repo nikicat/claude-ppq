@@ -1,0 +1,74 @@
+name: codex-e2e
+
+# Validates the Codex CLI port: installs the plugin from this repo's
+# .agents/plugins/marketplace.json into a real Codex CLI and drives the
+# skills headlessly — with ppq itself as the model provider (it serves the
+# OpenAI Responses API natively), so the only secret needed is PPQ_API_KEY.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "31 6 * * 1"
+
+jobs:
+  codex:
+    runs-on: ubuntu-latest
+    env:
+      PPQ_API_KEY: ${{ secrets.PPQ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: skip without secret
+        run: |
+          if [ -z "$PPQ_API_KEY" ]; then
+            echo "no PPQ_API_KEY secret — skipping" && echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: install Codex CLI, point it at ppq
+        if: env.SKIP != '1'
+        run: |
+          npm install -g @openai/codex
+          mkdir -p ~/.codex
+          # danger-full-access: disposable runner; our scripts need network
+          # and the runner lacks a guaranteed landlock/bwrap setup.
+          cat > ~/.codex/config.toml <<'EOF'
+          model = "z-ai/glm-4.7"
+          model_provider = "ppq"
+          approval_policy = "never"
+          sandbox_mode = "danger-full-access"
+
+          [model_providers.ppq]
+          name = "ppq.ai"
+          base_url = "https://api.ppq.ai/v1"
+          env_key = "PPQ_API_KEY"
+          wire_api = "responses"
+          EOF
+
+      - name: install the plugin from this repo's marketplace
+        if: env.SKIP != '1'
+        run: |
+          codex plugin marketplace add .
+          codex plugin add ppq@ppq-repo
+          codex plugin list
+
+      - name: skill flow — setup status
+        if: env.SKIP != '1'
+        run: |
+          out=$(codex exec --skip-git-repo-check "Use the setup skill (\$setup) to check the ppq configuration status and report exactly what it prints.")
+          echo "$out"
+          echo "$out" | grep -qiE "key file|api-key|env"
+
+      - name: skill flow — image model catalog with prices
+        if: env.SKIP != '1'
+        run: |
+          out=$(codex exec --skip-git-repo-check "Use the image skill to list the nano-banana image models with their prices.")
+          echo "$out"
+          echo "$out" | grep -qi "banana"
+
+      - name: skill flow — claude-code catalog (launcher path)
+        if: env.SKIP != '1'
+        run: |
+          out=$(codex exec --skip-git-repo-check "Use the claude-code skill to list the kimi models with their prices.")
+          echo "$out"
+          echo "$out" | grep -qi "kimi"

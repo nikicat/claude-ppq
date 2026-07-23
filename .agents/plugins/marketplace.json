@@ -1,0 +1,11 @@
+{
+  "name": "ppq-repo",
+  "plugins": [
+    {
+      "name": "ppq",
+      "source": { "source": "local", "path": "." },
+      "policy": { "installation": "AVAILABLE" },
+      "category": "Productivity"
+    }
+  ]
+}

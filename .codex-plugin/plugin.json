@@ -1,0 +1,16 @@
+{
+  "name": "ppq",
+  "version": "0.5.0",
+  "description": "Use ppq.ai from your coding agent: image generation/editing/upscaling, Bitcoin Lightning balance topups, model catalog with prices, and zero-to-working anonymous account setup.",
+  "author": { "name": "Nikolay Bryskin" },
+  "homepage": "https://github.com/nikicat/claude-ppq",
+  "repository": "https://github.com/nikicat/claude-ppq",
+  "license": "MIT",
+  "keywords": ["ppq", "images", "image-generation", "lightning", "bitcoin"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ppq.ai",
+    "shortDescription": "ppq.ai toolkit: images, Lightning topups, account setup",
+    "category": "Productivity"
+  }
+}
