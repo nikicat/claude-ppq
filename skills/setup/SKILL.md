@@ -34,9 +34,11 @@ Files: `~/.config/ppq/api-key` and `~/.config/ppq/credit-id`, both chmod 600.
 - **Never ask the user to paste an API key into the chat.** Everything said in
   the conversation lands in transcript files on disk; the script's ingestion
   paths exist precisely so the key never enters model context.
-- **Never `cat` the key or credit-id files**, never put a key in a command's
-  argv or an inline env assignment. `status` prints masked values by design —
-  use it for any inspection.
+- **Never `cat` or Read the key or credit-id files** (the Read tool counts —
+  file contents land in the transcript), never put a key in a command's argv
+  or an inline env assignment. `status` prints masked values by design — use
+  it for any inspection; `test -r ~/.config/ppq/api-key` for a bare
+  presence check.
 - The `credit_id` is also a secret: it drives the `/keys` management API
   (`x-credit-id` header) and can mint new spending keys.
 
