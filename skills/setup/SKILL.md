@@ -26,6 +26,9 @@ Run these **exactly as shown** — one command, full script path, no `cd`, no
 Windows backslashes as printed — rewriting separators or re-quoting breaks the
 match). These exact shapes are pre-approved (`allowed-tools`) for as long as
 this turn lasts; any other shape falls back to a normal permission prompt.
+If a literal unsubstituted `${CLAUDE_SKILL_DIR}` appears above (older
+harness), build the path from the "Base directory for this skill" header
+instead — still the same script, never an improvised alternative.
 
 Files: `~/.config/ppq/api-key` and `~/.config/ppq/credit-id`, both chmod 600.
 

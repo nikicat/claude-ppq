@@ -51,6 +51,11 @@ doesn't trigger a Bash permission prompt. Notes:
   the same grants, so they don't prompt when they happen within the turn.
 - Want the scripts allowed permanently, prompts never? Add the equivalent
   allow rules with absolute paths to your `~/.claude/settings.json`.
+- **Known limitation — Claude desktop app**: the desktop shell currently does
+  not arm skill `allowed-tools` grants, so every command prompts there even
+  though the identical flows run prompt-free in the CLI (verified continuously
+  by this repo's e2e workflow). Tracked upstream:
+  [anthropics/claude-code#80696](https://github.com/anthropics/claude-code/issues/80696).
 
 ## Direct CLI use (no Claude needed)
 
