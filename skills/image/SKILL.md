@@ -32,8 +32,9 @@ Windows backslashes as printed — rewriting separators or re-quoting breaks the
 match). These exact shapes are pre-approved (`allowed-tools`) for as long as
 this turn lasts; any other shape falls back to a normal permission prompt.
 If a literal unsubstituted `${CLAUDE_SKILL_DIR}` appears above (older
-harness), build the path from the "Base directory for this skill" header
-instead — still the same launcher, never an improvised alternative.
+harness), build the path from this SKILL.md's own location instead — the
+"Base directory for this skill" header, or the directory you read this
+SKILL.md from — still the same launcher, never an improvised alternative.
 **Keep iteration inside this one turn** —
 clarifying the prompt, picking between drafts, retrying: ask with the
 AskUserQuestion tool (numbered choices), whose answer returns as a tool result

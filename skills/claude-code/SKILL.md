@@ -67,8 +67,9 @@ Run these exactly as shown (one command, full path copied byte-for-byte —
 keep Windows backslashes as printed — nothing chained) — these shapes are
 pre-approved via `allowed-tools` for as long as this turn lasts. If a
 literal unsubstituted `${CLAUDE_SKILL_DIR}` appears above (older harness),
-build the path from the "Base directory for this skill" header instead —
-still the launcher, never curl. Your own
+build the path from this SKILL.md's own location instead — the "Base
+directory for this skill" header, or the directory you read this SKILL.md
+from — still the launcher, never curl. Your own
 calls go through the **Bash tool with the bash launcher on every OS,
 including Windows** — the `.ps1` exists to hand to the user for their own
 terminal; the only pre-approved way to run it yourself is its read-only

@@ -27,8 +27,9 @@ Windows backslashes as printed — rewriting separators or re-quoting breaks the
 match). These exact shapes are pre-approved (`allowed-tools`) for as long as
 this turn lasts; any other shape falls back to a normal permission prompt.
 If a literal unsubstituted `${CLAUDE_SKILL_DIR}` appears above (older
-harness), build the path from the "Base directory for this skill" header
-instead — still the same script, never an improvised alternative.
+harness), build the path from this SKILL.md's own location instead — the
+"Base directory for this skill" header, or the directory you read this
+SKILL.md from — still the same script, never an improvised alternative.
 
 Files: `~/.config/ppq/api-key` and `~/.config/ppq/credit-id`, both chmod 600.
 
