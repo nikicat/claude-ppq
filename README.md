@@ -17,12 +17,17 @@ Bitcoin-friendly) from Claude Code:
    touches the chat transcript, or creates a fresh anonymous account and hands
    off to `/ppq:topup` to fund it over Lightning. (Manual alternative: write
    the key file yourself, or export `PPQ_API_KEY`.)
-2. Install the plugin (the repo is its own single-plugin marketplace):
+2. Install the plugin from the shared
+   [nikicat/claude-plugins](https://github.com/nikicat/claude-plugins)
+   marketplace:
 
 ```
-/plugin marketplace add nikicat/claude-ppq
-/plugin install ppq@ppq
+/plugin marketplace add nikicat/claude-plugins
+/plugin install ppq@nikicat
 ```
+
+The repo is still its own marketplace too (`/plugin marketplace add
+nikicat/claude-ppq`, then `/plugin install ppq@ppq`).
 
 For local development: `claude --plugin-dir /path/to/claude-ppq` (single
 session), or `/plugin marketplace add /path/to/claude-ppq` (tracks your
